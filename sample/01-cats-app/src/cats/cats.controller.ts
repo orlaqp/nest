@@ -1,26 +1,13 @@
-import {
-  Body,
-  Catch,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
-import { TransformInterceptor } from '../common/interceptors/transform.interceptor';
 import { ParseIntPipe } from '../common/pipes/parse-int.pipe';
 import { CatsService } from './cats.service';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { Cat } from './interfaces/cat.interface';
 
-@Catch()
-@Controller('cats')
 @UseGuards(RolesGuard)
-@UseInterceptors(LoggingInterceptor, TransformInterceptor)
+@Controller('cats')
 export class CatsController {
   constructor(private readonly catsService: CatsService) {}
 
@@ -38,8 +25,8 @@ export class CatsController {
   @Get(':id')
   findOne(
     @Param('id', new ParseIntPipe())
-    id,
+    id: number,
   ) {
-    // logic
+    // get by ID logic
   }
 }

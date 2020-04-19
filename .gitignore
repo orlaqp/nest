@@ -5,6 +5,7 @@ node_modules/
 /.idea
 /.awcache
 /.vscode
+*.code-workspace
 
 # bundle
 packages/**/*.d.ts
@@ -26,6 +27,9 @@ yarn-error.log
 
 # tests
 /test
+/benchmarks/memory
 /coverage
 /.nyc_output
+/packages/graphql
+/benchmarks/memory
 build/config\.gypi

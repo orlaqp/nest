@@ -1,7 +1,15 @@
-import { MqttClientOptions } from '@nestjs/common/interfaces/external/mqtt-options.interface';
 import { Transport } from '../enums/transport.enum';
-import { Server } from './../server/server';
+import {
+  CompressionTypes,
+  ConsumerConfig,
+  KafkaConfig,
+  ProducerConfig,
+} from '../external/kafka-options.interface';
+import { MqttClientOptions } from '../external/mqtt-options.interface';
+import { Server } from '../server/server';
 import { CustomTransportStrategy } from './custom-transport-strategy.interface';
+import { Deserializer } from './deserializer.interface';
+import { Serializer } from './serializer.interface';
 
 export type MicroserviceOptions =
   | GrpcOptions
@@ -10,6 +18,7 @@ export type MicroserviceOptions =
   | NatsOptions
   | MqttOptions
   | RmqOptions
+  | KafkaOptions
   | CustomStrategy;
 
 export interface CustomStrategy {
@@ -21,11 +30,22 @@ export interface GrpcOptions {
   transport?: Transport.GRPC;
   options: {
     url?: string;
+    maxSendMessageLength?: number;
+    maxReceiveMessageLength?: number;
+    maxMetadataSize?: number;
+    keepalive?: {
+      keepaliveTimeMs?: number;
+      keepaliveTimeoutMs?: number;
+      keepalivePermitWithoutCalls?: number;
+      http2MaxPingsWithoutData?: number;
+      http2MinTimeBetweenPingsMs?: number;
+      http2MinPingIntervalWithoutDataMs?: number;
+      http2MaxPingStrikes?: number;
+    };
     credentials?: any;
-    protoPath: string;
-    package: string;
-    /** @deprecated */
-    root?: string;
+    protoPath: string | string[];
+    package: string | string[];
+    protoLoader?: string;
     loader?: {
       keepCase?: boolean;
       alternateCommentMode?: boolean;
@@ -49,6 +69,8 @@ export interface TcpOptions {
     port?: number;
     retryAttempts?: number;
     retryDelay?: number;
+    serializer?: Serializer;
+    deserializer?: Deserializer;
   };
 }
 
@@ -58,6 +80,8 @@ export interface RedisOptions {
     url?: string;
     retryAttempts?: number;
     retryDelay?: number;
+    serializer?: Serializer;
+    deserializer?: Deserializer;
   };
 }
 
@@ -65,6 +89,8 @@ export interface MqttOptions {
   transport?: Transport.MQTT;
   options?: MqttClientOptions & {
     url?: string;
+    serializer?: Serializer;
+    deserializer?: Deserializer;
   };
 }
 
@@ -73,6 +99,7 @@ export interface NatsOptions {
   options?: {
     url?: string;
     name?: string;
+    user?: string;
     pass?: string;
     maxReconnectAttempts?: number;
     reconnectTimeWait?: number;
@@ -81,6 +108,8 @@ export interface NatsOptions {
     pedantic?: boolean;
     tls?: any;
     queue?: string;
+    serializer?: Serializer;
+    deserializer?: Deserializer;
   };
 }
 
@@ -92,5 +121,35 @@ export interface RmqOptions {
     prefetchCount?: number;
     isGlobalPrefetchCount?: boolean;
     queueOptions?: any;
+    socketOptions?: any;
+    noAck?: boolean;
+    serializer?: Serializer;
+    deserializer?: Deserializer;
+  };
+}
+
+export interface KafkaOptions {
+  transport?: Transport.KAFKA;
+  options?: {
+    client?: KafkaConfig;
+    consumer?: ConsumerConfig;
+    run?: {
+      autoCommit?: boolean;
+      autoCommitInterval?: number | null;
+      autoCommitThreshold?: number | null;
+      eachBatchAutoResolve?: boolean;
+      partitionsConsumedConcurrently?: number;
+    };
+    subscribe?: {
+      fromBeginning?: boolean;
+    };
+    producer?: ProducerConfig;
+    send?: {
+      acks?: number;
+      timeout?: number;
+      compression?: CompressionTypes;
+    };
+    serializer?: Serializer;
+    deserializer?: Deserializer;
   };
 }

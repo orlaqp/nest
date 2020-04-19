@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { Test } from '@nestjs/testing';
-import * as express from 'express';
+import { expect } from 'chai';
 import * as request from 'supertest';
 import { NatsController } from '../src/nats/nats.controller';
 
@@ -14,12 +14,13 @@ describe('NATS transport', () => {
       controllers: [NatsController],
     }).compile();
 
-    server = express();
-    app = module.createNestApplication(server);
+    app = module.createNestApplication();
+    server = app.getHttpAdapter().getInstance();
+
     app.connectMicroservice({
       transport: Transport.NATS,
       options: {
-        url: 'nats://localhost:4222',
+        url: 'nats://0.0.0.0:4222',
       },
     });
     await app.startAllMicroservicesAsync();
@@ -71,6 +72,25 @@ describe('NATS transport', () => {
         Array.from({ length: 10 }, (v, k) => k + 91),
       ])
       .expect(200, 'true');
+  });
+
+  it(`/GET (exception)`, () => {
+    return request(server).get('/exception').expect(200, {
+      message: 'test',
+      status: 'error',
+    });
+  });
+
+  it(`/POST (event notification)`, done => {
+    request(server)
+      .post('/notify')
+      .send([1, 2, 3, 4, 5])
+      .end(() => {
+        setTimeout(() => {
+          expect(NatsController.IS_NOTIFIED).to.be.true;
+          done();
+        }, 1000);
+      });
   });
 
   afterEach(async () => {
